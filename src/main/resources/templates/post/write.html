@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/basic">
+    <th:block layout:fragment="title">
+        <!--fragement 속성에 이름을 지정해서 컨텐츠의 페이지 내용을 채운다. 즉, 페이지마다 타이틀을 다르게 처리하고 싶을 때 해당 속성을 이용해서 타이틀을 동적으로 처리 가능함-->
+        <title>글작성 페이지</title>
+    </th:block>
+
+    <th:block layout:fragment="content"> <!--게시글 등록or 게시글 리스트 페이지로 갈린다 -->
+        <div class="page_tits">
+            <h3>문제 작성</h3>
+            <p class="path"><strong>현재 위치 :</strong> <span>정보처리기사</span> <span>문제 작성</span> </p>
+        </div>
+
+        <div class="content">
+            <section>
+                <form id="saveForm" method="post" autocomplete="off" enctype="multipart/form-data">
+                    <!--폼의 id는 saveForm이고 post 방식으로 서버로 데이터를 전송하고 자동완성은 비활성화함, 파일 전송을 위해 멀티파트 인코딩으로 전송-->
+                    <!--/* 게시글 수정인 경우, 서버로 전달할 게시글 번호 (PK) */-->
+                    <input type="hidden" id="id" name="id" th:if="${post != null}" th:value="${post.id}" />
+
+                    <!--/* 서버로 전달할 공지글 여부 */-->
+                    <input type="hidden" id="noticeYn" name="noticeYn" />
+
+                    <!--/* 삭제 처리할 파일 번호 */-->
+                    <input type="hidden" id="removeFileIds" name="removeFileIds" />
+
+                    <table class="tb tb_row">
+                        <colgroup>
+                            <col style="width:15%;" /><col style="width:35%;" /><col style="width:15%;" /><col style="width:35%;" />
+                        </colgroup>
+                        <tbody>
+                        <tr>
+                            <th scope="row">공지글</th>
+                            <td><span class="chkbox"><input type="checkbox" id="isNotice" name="isNotice" class="chk" onclick="toggleQuestion()" /><i></i><label for="isNotice"> 설정</label></span></td>
+                            <th scope="row">질문글</th>
+                            <td>
+                                <span class="chkbox">
+                                    <input type="checkbox" id="isQuestion" name="isQuestion" class="chk" onclick="toggleQuestion()" />
+                                    <i></i>
+                                    <label for="isQuestion"> 설정</label>
+                                </span>
+                            </td>                        </tr>
+                        <tr>
+                            <th scope="row">등록일</th>
+                            <td colspan="3"><input type="text" id="createdDate" name="createdDate" readonly /></td>
+                        </tr>
+                        <tr>
+
+                            <tr>
+                                <th>제목 <span class="es">필수 입력</span></th>
+                                <td colspan="3"><input type="text" id="title" name="title" maxlength="50" placeholder="제목을 입력해 주세요." /></td>
+                            </tr>
+                            <tr>
+                                <th>작성자 <span class="es">필수 입력</span></th>
+                                <td colspan="3"><input type="text" id="writer" name="writer" maxlength="10" placeholder="이름을 입력해 주세요." /></td>
+                            </tr>
+                            <tr>
+                                <th>문제 <span class="es">필수 입력</span></th>
+                                <td colspan="3"><textarea id="problem" name="problem" cols="50" rows="10" placeholder="문제를 입력해 주세요."></textarea></td>
+                            </tr>
+                            <tr>
+                                <th>내용 <span class="es">필수 입력</span></th>
+                                <td colspan="3"><textarea id="content" name="content" cols="50" rows="10" placeholder="1번 내용을 입력해 주세요."></textarea></td>
+                            </tr>
+                            <tr>
+                                <th>내용2 <span class="es">필수 입력</span></th>
+                                <td colspan="3"><textarea id="content2" name="content2" cols="50" rows="10" placeholder="2번 내용을 입력해 주세요."></textarea></td>
+                            </tr>
+                            <tr>
+                                <th>내용3 <span class="es">필수 입력</span></th>
+                                <td colspan="3"><textarea id="content3" name="content3" cols="50" rows="10" placeholder="3번 내용을 입력해 주세요."></textarea></td>
+                            </tr>
+                            <tr>
+                                <th>내용4 <span class="es">필수 입력</span></th>
+                                <td colspan="3"><textarea id="content4" name="content4" cols="50" rows="10" placeholder="4번 내용을 입력해 주세요."></textarea></td>
+                            </tr>
+                            <tr>
+                                <th>첨부파일</th>
+                                <td colspan="3">
+                                    <div class="file_list">
+                                        <div>
+                                            <div class="file_input">
+                                                <input type="text" readonly/>
+                                                <label> 첨부파일
+                                                    <input type="file" name="files" onchange="selectFile(this);"/>
+                                                </label>
+                                            </div>
+                                        <button type="button" onclick="removeFile(this);" class="btns del_btn"><span>삭제</span></button>
+                                            <button type="button" onclick="addFile();" class="btns fn_add_btn"><span>파일 추가</span></button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                             <tr>
+                                <th>설명 <span class="es">필수 입력</span></th>
+                                <td colspan="3"><textarea id="exp" name="exp" cols="50" rows="10" placeholder="설명을 입력해 주세요."></textarea></td>
+                            </tr>
+                             <tr>
+                                <th>정답 <span class="es">필수 입력</span></th>
+                                <td colspan="3"><input type="text" id="ansnum" name="ansnum" maxlength="10" placeholder="정답을 입력해 주세요. ex)1 (게시글 수정시 필수 입력)" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </form>
+                <p class="btn_set">
+                    <button type="button" id="saveBtn" onclick="savePost();" class="btns btn_st3 btn_mid">저장</button>
+                    <a th:href="@{/post/list.do}" class="btns btn_bdr3 btn_mid">뒤로</a>
+                </p>
+            </section>
+        </div> <!--/* .content */-->
+    </th:block>
+
+    <th:block layout:fragment="script">
+        <!--자바스크립트도 페이지마다 로직이 다르기 때문에 fragment를 이용 -->
+        <!-- /*<![CDATA[*/ /*]]>*/는 xml 문서에서 파서에 의해 특수 문자나 태그로 해석되지 않고 그대로 텍스트로 처리된다-->
+        <!--script 태그에 th:inline 속성을 javascript로 선언해야 자바스크립트 내에서 타임리프 문법 사용 가능-->
+        <script th:inline="javascript"> <!--/* 자바 스크립트 시작 */-->
+                /*<![CDATA[*/
+
+            window.onload = () => {
+              renderPostInfo();
+
+              findAllFile();
+            }
+
+
+            // 등록일 초기화
+            function initCreatedDate() {
+            //dayjs는 js영역에서 날짜 데이터를 쉽게 컨트롤 할 수 있도록 도와주는 라이브러리임,  body.html 하단에 import해놓음
+              document.getElementById('createdDate').value = dayjs().format('YYYY-MM-DD');
+            }
+
+
+            // 게시글 상세정보 렌더링
+            function renderPostInfo() {
+              const post = [[ ${post} ]];
+
+              if ( !post ) {  //신규 게시글 작성은 post객체를 화면으로 전달하지 않기 때문에 오늘 날짜를 랜더링 한 후 로직을 종료
+                initCreatedDate();
+                return false;
+              }
+
+              //아래는 기존 게시글 수정하는 경우의 메인 로직
+              const form = document.getElementById('saveForm');
+              const fields = ['id', 'title', 'content', 'content2', 'content3', 'content4', 'problem', 'writer', 'noticeYn', 'exp', 'ansnum'];
+              //saveForm에서 fields에 선언한 필드명에 해당되는 필드를 찾음
+              form.isNotice.checked = post.noticeYn;
+              form.createdDate.value = dayjs(post.createdDate).format('YYYY-MM-DD HH:mm');
+
+
+              fields.forEach(field => { //기존 게시글 정보를 위에서 찾은 것으로 랜더링함
+                form[field].value = post[field];
+              })
+            }
+
+            // 게시글 저장(수정)
+            function savePost() {  //위에 html에 <button부분에서 onclick="savePost()" 이벤트를 통해 실행된다
+                const form = document.getElementById('saveForm'); //form 설정 코드 위에 form의 id가 saveForm이라고 이미 설정했고 그 saveFomr의 요소를 변수 form에 할당함
+                const fields = [form.title, form.writer, form.problem];
+                const fieldNames = ['제목', '이름', '문제'];
+
+            if (form.isQuestion.checked) {
+                    // 질문글 체크박스가 체크되었을 때, 내용, 내용2, 내용3, 내용4, 설명, 정답 필드를 빈 문자열로 설정
+                    form.content.value = '';
+                    form.content2.value = '';
+                    form.content3.value = '';
+                    form.content4.value = '';
+                    form.exp.value = '';
+                    form.ansnum.value = 1;
+                  }
+
+                for (let i = 0, len = fields.length; i < len; i++) {
+                    isValid(fields[i], fieldNames[i]);
+                //유효성 검사 코드, fields는 위에 선언한대로 제목, 작성자, 내용등 필드를 넣고 각 필드의 이름을 담아 반복문 안에서 isValid() 함수를 호출해 값이 입력되지 않은 필드를 탐색한다. 유효하다면 true를 반환함 아니면 경고 메시지
+                //isValid 함수는 static 폴더에 있는 fuction.js에 선언된 함수로 value값이 비어있을 시 해당 필드로 포커싱해줌
+                }
+
+                document.getElementById('saveBtn').disabled = true; //데이터 중복 저장 방지, 한 번 클릭시 버튼을 disabled로
+                form.noticeYn.value = form.isNotice.checked;    //공지글 여부의 값 세팅 noticeYn은 위에서 설정한대로 hidden 타입임
+                form.removeFileIds.value = removeFileId.getAll().join(); //익명함수를 이용해 ids에 담긴 모든 첨부파일 번호를 가져온후 join을 통해 배열에 담긴 모든 값을 콤마로 연결(default는 콤마로 연결)
+                form.action = [[ ${post == null} ]] ? '/post/save.do' : '/post/update.do';  //form의 action을 설정하는 로직임. 컨트롤레어서 전달받은 게시글 응답 객체(post)의 유무에 따라 신규 저장인지, 기존 게시글 수정인지 구분함
+                //추후 form.action 속성은 폼 데이터가 서버로 제출될 때 데이터를 처리할 URL을 지정한다
+                form.submit(); //폼 데이터(파라미터)를 서버(컨트롤러)로 전달함
+            }
+
+           /*
+                파일 삭제 처리용 익명 함수, 즉시 실행 함수(IIFE), 함수를 모듈화(객체화)한다. 파일 목록에서 삭제된 파일의 ID를 추적하고 관리하기 위해 만듦
+                ids:첨부파일이 변경 또는 삭제되었을 때, 삭제 처리할 첨부파일의 id를 저장하는 용도의 배열
+                add() :ids에 삭제 처리할 첨부파일 id를 추가, ids.includes()로 중복되는 값이 없는 경우에만 ids에 id를 추가
+                getAll() : ids에 담긴 변경 또는 삭제된 모든 파일의 id를 조회
+           */
+            const removeFileId = (function() {
+                const ids = [];
+                return {
+                    add(id) {
+                        if (ids.includes(id)) {
+                            return false;
+                        }
+                        ids.push(id);
+                    },
+                    getAll() {
+                        return ids;
+                    }
+                }
+            }());
+
+           // 파일 선택
+            function selectFile(element, id) {
+
+                const file = element.files[0];  //file 타입의 input(files)에 담긴 파일 객체, [0]은 파일 선택 창에서 첫번째로 선택된 파일을 의미함
+                const filename = element.closest('.file_input').firstElementChild; //text 타입의 input에 담기는 파일명
+                //file_input(첨부파일 클래스 이름) 클래스의 요소중 가장 가까운 상위 요소(=첫 번째 자식 요소)를 filename 변수에 할당
+
+                // 1. 파일 선택 창에서 취소 버튼이 클릭된 경우
+                if ( !file ) {
+                    filename.value = ''; //files의 value는 초기화되므로 filename을 빈 값으로 초기화
+                    return false;
+                }
+
+                // 2. 파일 크기가 10MB를 초과하는 경우
+                const fileSize = Math.floor(file.size / 1024 / 1024); //size(바이트 단위)를 MB 단위로 변경해서 파일 크기를 체크, Math.floor()를 이용해 소수점 제거
+                if (fileSize > 10) { //파일 사이즈 초과시 filename과 files의 value를 초기화하고 로직 종료
+                    alert('10MB 이하의 파일로 업로드해 주세요.');
+                    filename.value = '';
+                    element.value = '';
+                    return false;
+                }
+
+                // 3. 파일명 지정
+                filename.value = file.name; //파일의 원본 이름을 filename에 세팅, 즉 파일 선택 창에서 선택된 파일의 이름이 저장
+
+                // 4. 삭제할 파일 id 추가, 기존에 업로드된 파일이 변경되면 삭제 처리할 첨부파일의 id를 추가함
+                 if (id) {
+                    removeFileId.add(id);
+                }
+            }
+
+
+            // 파일 추가
+            function addFile() { //파일 추가 버튼과 연결된 onclick 이벤트임 이 함수를 실행하면 첨부파일 영역이 하나씩 추가됨
+                const fileDiv = document.createElement('div'); //fileDiv 라는 변수에 새로운 <div> 요소 생성하여 할당
+              //아래는 파일 입력을 위한 부모요소
+                fileDiv.innerHTML =`
+                    <div class="file_input">
+                        <input type="text" readonly />
+                        <label> 첨부파일
+                            <input type="file" name="files" onchange="selectFile(this);" />
+                        </label>
+                    </div>
+                    <button type="button" onclick="removeFile(this);" class="btns del_btn"><span>삭제</span></button>
+                `;
+                document.querySelector('.file_list').appendChild(fileDiv);
+                //.file_list 클래스(첨부파일 클래스 아이디)를 가진 요소를 찾아서 그 자식으로 fileDiv를 추가. 즉, 파일 추가/삭제 버튼이 추가된다
+            }
+
+            // 파일 삭제
+            function removeFile(element, id) {
+
+                //삭제할 파일 id 추가
+                if (id){
+                    removeFileId.add(id)
+                }
+
+                const fileAddBtn = element.nextElementSibling; //element의 다음 형제 요소를 할당함. 즉 파일 삭제 버튼 다음에 있는 파일 추가 버튼 요소를 찾음
+                if (fileAddBtn) { //fileAddBtn(파일 추가 버튼)이 존재하는 경우 = 첫 번째 파일 영역
+                    const inputs = element.previousElementSibling.querySelectorAll('input');
+                    inputs.forEach(input => input.value = '')
+                    return false;
+                } //첫 번째 파일 영역에는 파일 추가 버튼이 있기 때문에 div.file의 모든 input을 찾아 값을 초기화함
+                element.parentElement.remove(); //그 외에는 부모 요소를 찾아 해당 요소를 제거함 즉 addFile()로 추가한 파일 영역 자체를 DOM에서 제거함
+            }
+
+
+                // 전체 파일 조회
+            function findAllFile() {
+
+                // 1. 신규 등록/수정 체크, 신규 등록일시 첨부파일 조회할 필요가 없기 떄문에 로직 종료
+                const post = [[ ${post}]];
+                if ( !post ) {
+                    return false;
+                }
+
+                // 2. API 호출
+                const response = getJson(`/posts/${post.id}/files`);
+
+                // 3. 로직 종료
+                if ( !response.length ) {
+                    return false;
+                }
+
+                // 4. 업로드 영역 추가, 반복 조건을 첨부파일 개수 -1로 선택한 이유는 메인 첨부파일 영역이 있기 때문에
+                for (let i = 0, len = (response.length - 1); i < len; i++) {
+                    addFile();
+                }
+
+                // 5. 파일 선택 & 삭제 이벤트 재선언 & 파일명 세팅
+                /*
+                    filenameInputs 에는 파일의 text타입의 input으로 되있는 태그들이 저장됨
+                        (file_list 클래스를 가진 요소중 input type이 text인 태그를 선택)
+                    forEach()는 filenameInputs의 길이만큼 반복되는데 input과 i(response에 담긴 파일 응답 데이터의 개수)
+                        는 1:1로 매칭된다 즉, 4번 로직이 종료된 시점에 첨부파일 영역의 개수와 파일 응답 데이터의 개수가 같다
+                    fileInput : file 타입의 input, selectFile()을 실행, fileRemoveBtn : 파일 삭제, removeFile() 실행
+                    파일의 변경과 삭제 처리를 위해 response의 파일 id 값을 전달해 setAttribute를 한다
+                    마지막으로 DB에 저장된 원본 파일명을 text 타입의 input value로 세팅함
+                */
+                const filenameInputs = document.querySelectorAll('.file_list input[type="text"]');
+                filenameInputs.forEach((input, i) => {
+                    const fileInput = input.nextElementSibling.firstElementChild;
+                    const fileRemoveBtn = input.parentElement.nextElementSibling;
+                    fileInput.setAttribute('onchange', `selectFile(this, ${response[i].id})`);
+                    fileRemoveBtn.setAttribute('onclick', `removeFile(this, ${response[i].id})`);
+                    input.value = response[i].originalName;
+                })
+            }
+
+                function toggleQuestion() {
+                    var questionCheckbox = document.getElementById("isQuestion");
+                    var contentFields = document.querySelectorAll("#content, #content2, #content3, #content4, #exp, #ansnum");
+
+                    if (questionCheckbox.checked) {
+                        // "질문글" 체크박스가 체크되면 입력 칸들을 숨김
+                        contentFields.forEach(function (field) {
+                            field.style.display = "none";
+                            field.value = null; // 값 null로 설정
+                        });
+                    } else {
+                        // "질문글" 체크박스가 체크 해제되면 입력 칸들을 다시 보여줌
+                        contentFields.forEach(function (field) {
+                            field.style.display = "block";
+                        });
+                    }
+                }
+
+        /*]]>*/
+        </script>
+    </th:block>
+</html>

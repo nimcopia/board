@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/basic">
+<th:block layout:fragment="title">
+  <title>정답 페이지</title>
+</th:block>
+
+<th:block layout:fragment="content">
+  <div class="page_tits">
+    <h3>문제 정답</h3>
+    <p class="path"><strong>현재 위치 :</strong> <span>정보처리기사</span> <span>문제 정답</span> </p>
+  </div>
+
+    <style>
+      div.size150 {font-size:150%;}
+      div.size200b {font-size: 200%;color:blue;}
+      div.size200r {font-size: 200%;color:red;}
+      div.size200 {font-size: 200%;}
+    </style>
+
+    <div class="content">
+    <section>
+      <div class="size200r">아쉽습니다, 틀렸습니다</div>
+      <p class="btn_set tc">
+        <a th:href="@{/post/view.do( id=${post.id} )}" class="btns btn_bdr1 btn_mid">다시풀기</a>
+      </p>
+  </section>
+  </div>
+</th:block>
+</html>

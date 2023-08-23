@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/basic">
+<th:block layout:fragment="title">
+  <title>정답 페이지</title>
+</th:block>
+
+<th:block layout:fragment="content">
+  <div class="page_tits">
+    <h3>문제 정답</h3>
+    <p class="path"><strong>현재 위치 :</strong> <span>정보처리기사</span> <span>문제 정답</span> </p>
+  </div>
+
+    <style>
+      div.exp {font-size:150%;}
+      div.cor {font-size: 200%;color:blue;}
+      div.ans_num {font-size: 200%;color:red;}
+      div.ans {font-size: 200%;}
+    </style>
+
+   <div class="content">
+    <section>
+      <div class="cor">축하합니다! 정답입니다</div>
+      <div class="exp"><p><br>해설:[[ ${post.exp} ]]</p></div>
+      <p class="btn_set">
+        <a th:href="@{/post/list.do}" class="btns btn_bdr3 btn_mid">문제목록</a>
+      </p>
+  </section>
+  </div>
+</th:block>
+</html>

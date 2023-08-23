@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/basic">
+<th:block layout:fragment="title">
+  <title>상세 페이지</title>
+</th:block>
+
+<th:block layout:fragment="content">
+  <div class="page_tits">
+    <h3>문제</h3>
+    <p class="path"><strong>현재 위치 :</strong> <span>정보처리기사</span> <span>문제</span> </p>
+  </div>
+
+  <div class="content"> <!--컨트롤러의 openPostView에서 이 화면으로 전달한 post 객체를 이용해서 필요한 게시글 정보를 텍스트 형식으로 출력 -->
+    <section>
+
+      <table class="tb tb_row">
+        <colgroup>
+          <col style="width:10%;" /><col style="width:23%;" /><col style="width:10%;" /><col style="width:23%;" />
+        </colgroup>
+
+        <tbody>
+        <tr>
+          <th scope="row">제목</th>
+          <td >[[ ${post.title} ]]</td>
+          <th scope="row">작성자</th>
+          <td >[[ ${post.writer} ]]</td>
+        </tr>
+          <th scope="row">문제</th>
+          <td colspan="3">[[ ${post.problem} ]]</td>
+        <tr th:unless="${post.content.isEmpty()}">
+          <th scope="row">
+            <a th:href="${post.ansnum}%5==1? @{/post/answer.do( id=${post.id} )} : @{/post/wrong.do( id=${post.id} )}" class="btns btn_bdr1 btn_mid2">1</a></button>
+          </th>
+          <td colspan="3">[[ ${post.content} ]]</td>
+        </tr>
+        <tr th:unless="${post.content2.isEmpty()}">
+          <th scope="row">
+            <a th:href="${post.ansnum}%5==2? @{/post/answer.do( id=${post.id} )} : @{/post/wrong.do( id=${post.id} )}" class="btns btn_bdr2 btn_mid2">2</a></button>
+          </th>
+          <td colspan="3">[[ ${post.content2} ]]</td>
+        </tr>
+        <tr th:unless="${post.content3.isEmpty()}">
+          <th scope="row">
+            <a th:href="${post.ansnum}%5==3? @{/post/answer.do( id=${post.id} )} : @{/post/wrong.do( id=${post.id} )}" class="btns btn_bdr3 btn_mid2">3</a></button>
+          </th>
+          <td colspan="3">[[ ${post.content3} ]]</td>
+        </tr>
+        <tr th:unless="${post.content4.isEmpty()}">
+          <th scope="row">
+            <a th:href="${post.ansnum}%5==4? @{/post/answer.do( id=${post.id} )} : @{/post/wrong.do( id=${post.id} )}" class="btns btn_bdr4 btn_mid2">4</a></button>
+          </th>
+          <td colspan="3">[[ ${post.content4} ]]</td>
+        </tr>
+        <tr>
+          <th scope="row">첨부파일</th>
+          <td id="files" colspan="3">
+
+          </td>
+        </tr>
+        </tbody>
+
+      </table>
+
+     <br>
+
+
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <button id="recommendButton" type="button" class="button dark btn_mid" onclick="handleRecommendClick()">
+          <div class="hand">
+            <div class="thumb"></div>
+          </div>
+          <span id="recommendCount">추천 [[ ${post.recomCnt} ]] </span>
+        </button>
+      </div>
+
+      <p class="btn_set">
+        <button type="button" onclick="goWritePage();" class="btns btn_bdr4 btn_mid">수정</button>
+        <button type="button" onclick="deletePost();" class="btns btn_bdr1 btn_mid">삭제</button>
+        <button type="button" onclick="goListPage();" class="btns btn_bdr3 btn_mid">뒤로</button>
+      </p>
+
+        <!--/* 댓글 작성 */-->
+      <div class="cm_write">
+        <fieldset>
+          <legend class="skipinfo">댓글 입력</legend>
+          <div class="cm_input">
+            <p><textarea id="content" name="content" onkeyup="countingLength(this);" cols="90" rows="4" placeholder="댓글을 입력해 주세요."></textarea></p>
+            <span><button type="button" class="btns" onclick="saveComment();">등 록</button> <i id="counter">0/300자</i></span>
+          </div>
+        </fieldset>
+      </div>
+      <!--/* 댓글 렌더링 영역 */-->
+      <div class="cm_list">
+
+      </div>
+
+      <!--/* 페이지네이션 렌더링 영역 */-->
+      <div class="paging">
+
+      </div>
+    </section>
+  </div> <!--/* .content */-->
+
+  <!--/* 댓글 수정 popup */-->
+  <div id="commentUpdatePopup" class="popLayer">
+    <h3>댓글 수정</h3>
+    <div class="pop_container">
+      <table class="tb tb_row tl">
+        <colgroup>
+          <col style="width:30%;" /><col style="width:70%;" />
+        </colgroup>
+        <tbody>
+        <tr>
+          <th scope="row">작성자<span class="es">필수 입력</span></th>
+          <td><input type="text" id="modalWriter" name="modalWriter" placeholder="작성자를 입력해 주세요." /></td>
+        </tr>
+        <tr>
+          <th scope="row">내용<span class="es">필수 입력</span></th>
+          <td><textarea id="modalContent" name="modalContent" cols="90" rows="10" placeholder="수정할 내용을 입력해 주세요."></textarea></td>
+        </tr>
+        </tbody>
+      </table>
+      <p class="btn_set">
+        <button type="button" id="commentUpdateBtn" class="btns btn_st2">수정</button>
+        <button type="button" class="btns btn_bdr2" onclick="closeCommentUpdatePopup();">취소</button>
+      </p>
+    </div>
+    <button type="button" class="btn_close" onclick="closeCommentUpdatePopup();"><span><i class="far fa-times-circle"></i></span></button>
+  </div>
+</th:block>
+
+<!--
+
+--findAllComment()--
+//drawComments(response.list) : drawComments함수는 받은 댓글 리스트를 HTML로 변환하여 화면에 표시하는 역할
+//drawPage(pagination, page) : drawPage 함수는 페이지네이션을 생성하여 화면에 표시하는 역할, 두 번째 매개변수(page)는 현재 페이지 번호로 해당 페이지를 활성화 표시함
+//page = (page) ? page : (currentPage ? Number(currentPage.text) : 1) : page변수가 값이 존재할시 그 값을 그대로 사용(page)하고 값이 없는 경우에는 현재 활성화된 페이지 번호를 나타내는 <a> 태그의 텍스트를 숫자로 변환하여 할당(Number(currentPage.text))한다
+  ㄴ 만약 활성화된 페이지 번호를 나타내는 <a> 태그가 존재하지 않는다면 '1'로 기본 값을 설정한다. 결론은 page 변수는 사용자가 클릭한 페이지 번호이고, 초기 로드 시에는 첫 번째 페이지를 나타낸다
+
+-- deletePost()--
+//게시글 삭제 최종 선택, 확인과 취소 버튼은 각각 true와 false를 리턴
+// new URLSearchParams(location.search).forEach((value, key) => { ...... : 여기서부터 밑의 로직(const formHtml= ' '구간)은 PageController의 deletePost() 호출 로직
+// inputHtml += `<input type="hidden" name="${key}" value="${value} : 폼에 히든 타입으로 게시글 번호(id)를 담음, 후에 폼 전송 시점에 id가 컨트롤러의 deletePost()로 전송됨
+//const doc : 문자열로 그려진 HTML을 HTMl 엘리먼트(Node)=doc 문서로 파싱해줌
+// const form = doc.body.firstChild : 위의 doc에서 파싱된 폼 엘리먼트를 꺼내옴(doc 객체의 <body>요소의 첫 번째 자식요소를 form 변수에 할당)
+//document.getElementById('deleteForm').submit() : HTML 바디에 폼 엘리먼트를 추가해서 submit을 발생시키면 PostController의 deletePost() 메서드가 실행됨
+
+--saveComment()--
+//document.getElementById('counter').innerText = content.value.length + '/300자' : content의 Id를 현재 입력한 댓글의 '글자수/300자' 이렇게 되게 출력
+
+--openCommentUpdatePopup()--
+//const postId = [[ ${post.id} ]] : JS에서 서버 사이드 템플릿 엔진을 사용하여 동적으로 게시물 ID를 가져옴 '[[...]]' 는 서버 사이드 템플릿 엔진의  문법으로
+  ㄴ해당 부분이 템플릿 엔진에 의해 처리되어 동적인 값을 삽입하는 역할을 한다 '${post.id}'는 똑같은 서버 사이드 문법으로 서버에서 전달받은 게시물의 ID값을 나타냄
+//url : '/posts/${postId}/comments/${id}' : 요청이 전송될 URL을 지정함
+//document.getElementById('modalWriter').value = response.writer : 'modalWriter' 라는 id를 가진 HTML 요소의 값에 응답 데이터(response)의 'writer' 값을 설정함
+  ㄴ writer의 값은 서버에서 처리된 댓글의 정보들중 글쓴이의 정보 = CommentResponse의 객체중 writer의 값
+//layerPop('commentUpdatePopup') : 기존에 common.js에 선언되어 있는 함수, 화면에 레이어 팝업을 띄워줌
+
+--closeCommentUpdatePopup()--
+//document.querySelectorAll('#modalContent, #modalWriter')forEach(element => element.value='') : 레이어 팝업의 작성자와 내용을 초기화
+//document.getElementById('commentUpdateBtn').removeAttribute('onclick') : 수정 버튼에 바이딩된 클릭 이벤트를 제거함
+//layerPopClose('commentUpdatePopup') : 기존에 common.js에 선언되어 있는 함수, 화면에 레이어 팝업을 닫아줌
+
+--drawPage()--
+//const postId = new URLSearchParams(location.search).get('id') : location.search를 이용하여 현재 URL의 쿼리 파라미터의 문자열을 가져온다. id 의 값을 get하여 postId 변수에 할당한다
+//history.replaceState({}, '', location.pathname + `?id=${postId}&page=${currentPage.text}`) : history.replaceState()를 사용하여 페이지를 새로고침하지 않고도 URL을 변경할 수 있게 한다.
+  ㄴlocation.pathname은 페이지의 주소(/post/view.do)를 리턴하고 최종적으로 페이지 주소 + (게시글번호(id)& 페이지 번호(page))를 전달함
+
+*JS의 함수가 호출되면 작동하는 순서는 다음과 같다 (뷰(JS= HTML) -> 컨트롤러 -> 서비스 -> 매퍼인터페이스 -> 매퍼xml(DB))
+-->
+
+<th:block layout:fragment="script">
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+
+            window.onload = () => {
+              findAllFile();
+              checkQuestionPost();
+              findAllComment();
+
+            }
+
+
+                 // 전체 댓글 조회
+            function findAllComment(page) {
+
+                const uriPage = new URLSearchParams(location.search).get('page');
+                page = (page) ? page : (uriPage ? Number(uriPage) : 1);
+
+                const postId = [[ ${post.id}]];
+                const uri = `/posts/${postId}/comments`;
+                const params = {
+                    page : page,
+                    recordSize : 5,
+                    pageSize : 10,
+                    postId : postId,
+                }
+
+                const response = getJson(uri, params);
+                const pagination = response.pagination;
+                drawComments(response.list);
+                drawPage(pagination, page);
+            }
+
+            // 게시글 삭제
+            function deletePost() {
+
+                const id = [[ ${post.id} ]];
+
+                if ( !confirm('게시글을 삭제할까요?') ) {
+                    return false;
+                }
+
+                let inputHtml = '';
+
+                new URLSearchParams(location.search).forEach((value, key) => {
+                    inputHtml += `<input type="hidden" name="${key}" value="${value}" />`;
+                })
+
+                const formHtml = `
+                    <form id="deleteForm" action="/post/delete.do" method="post">
+                        ${inputHtml}
+                    </form>
+                `;
+
+                const doc = new DOMParser().parseFromString(formHtml, 'text/html');
+                const form = doc.body.firstChild;
+                document.body.append(form);
+                document.getElementById('deleteForm').submit();
+            }
+
+
+            // 게시글 수정 페이지로 이동
+            function goWritePage() {
+                location.href = '/post/write.do' + location.search;
+            }
+
+
+            // 게시글 리스트 페이지로 이동
+            function goListPage() {
+                const queryString = new URLSearchParams(location.search);
+                queryString.delete('id');
+                location.href = '/post/list.do' + '?' + queryString.toString();
+            }
+
+
+            // 댓글 길이 카운팅
+            function countingLength(content) {
+                if (content.value.length > 300) {
+                    alert('댓글을 300자 이하로 입력해 주세요.');
+                    content.value = content.value.substring(0, 300);
+                    content.focus();
+                }
+                document.getElementById('counter').innerText = content.value.length + '/300자';
+            }
+
+
+            // 댓글 저장
+            function saveComment() {
+
+                const content = document.getElementById('content');
+                isValid(content, '댓글');
+
+                const postId = [[ ${post.id} ]];
+                const uri = `/posts/${postId}/comments`;
+                const params = {
+                    postId : postId,
+                    content : content.value,
+                    writer : 'USER'
+                }
+
+                callApi(uri, 'post', params);
+                alert('저장되었습니다.');
+                content.value = '';
+                document.getElementById('counter').innerText = '0/300자';
+                findAllComment(1);
+            }
+
+
+            // 댓글 수정 팝업 open
+            function openCommentUpdatePopup(id) {
+
+                const postId = [[ ${post.id} ]];
+                const uri = `/posts/${postId}/comments/${id}`;
+                const response = getJson(uri);
+                document.getElementById('modalWriter').value = response.writer;
+                document.getElementById('modalContent').value = response.content;
+                document.getElementById('commentUpdateBtn').setAttribute('onclick', `updateComment(${id})`);
+                layerPop('commentUpdatePopup');
+            }
+
+
+            // 댓글 수정 팝업 close
+            function closeCommentUpdatePopup() {
+                document.querySelectorAll('#modalContent, #modalWriter').forEach(element => element.value = '');
+                document.getElementById('commentUpdateBtn').removeAttribute('onclick');
+                layerPopClose('commentUpdatePopup');
+            }
+
+
+            // 댓글 수정
+            function updateComment(id) {
+
+                const writer = document.getElementById('modalWriter');
+                const content = document.getElementById('modalContent');
+                isValid(writer, '작성자');
+                isValid(content, '수정할 내용');
+
+                const postId = [[ ${post.id} ]];
+                const uri = `/posts/${postId}/comments/${id}`;
+                const params = {
+                    id : id,
+                    postId : postId,
+                    content : content.value,
+                    writer : writer.value
+                }
+
+                callApi(uri, 'patch', params);
+                alert('수정되었습니다.');
+                closeCommentUpdatePopup();
+                findAllComment();
+            }
+
+
+            // 댓글 삭제
+            function deleteComment(id) {
+
+                if ( !confirm('선택하신 댓글을 삭제할까요?') ) {
+                    return false;
+                }
+
+                const postId = [[ ${post.id} ]];
+                const uri = `/posts/${postId}/comments/${id}`;
+                callApi(uri, 'delete');
+                alert('삭제되었습니다.');
+                findAllComment();
+            }
+
+
+            // 댓글 HTML draw
+            function drawComments(list) {
+
+                if ( !list.length ) {
+                    document.querySelector('.cm_list').innerHTML = '<div class="cm_none"><p>등록된 댓글이 없습니다.</p></div>';
+                    return false;
+                }
+
+                let commentHtml = '';
+
+                list.forEach(row => {
+                    commentHtml += `
+                        <div>
+                            <span class="writer_img"><img src="/images/default_profile.png" width="30" height="30" alt="기본 프로필 이미지"/></span>
+                            <p class="writer">
+                                <em>${row.writer}</em>
+                                <span class="date">${dayjs(row.createdDate).format('YYYY-MM-DD HH:mm')}</span>
+                            </p>
+                            <div class="cont"><div class="txt_con">${row.content}</div></div>
+                            <p class="func_btns">
+                                <button type="button" onclick="openCommentUpdatePopup(${row.id});" class="btns"><span class="icons icon_modify">수정</span></button>
+                                <button type="button" onclick="deleteComment(${row.id});" class="btns"><span class="icons icon_del">삭제</span></button>
+                            </p>
+                        </div>
+                    `;
+                })
+
+                document.querySelector('.cm_list').innerHTML = commentHtml;
+            }
+
+
+            // 페이지네이션 HTML draw
+            function drawPage(pagination, page) {
+
+                // 1. 필수 파라미터가 없는 경우, 페이지네이션 HTML을 제거한 후 로직 종료
+                if ( !pagination || !page ) {
+                    document.querySelector('.paging').innerHTML = '';
+                    throw new Error('Missing required parameters...');
+                }
+
+                // 2. 페이지네이션 HTML을 그릴 변수
+                let html = '';
+
+                // 3. 첫/이전 페이지 버튼 추가
+                if (pagination.existPrevPage) {
+                    html += `
+                        <a href="javascript:void(0);" onclick="findAllComment(1)" class="page_bt first">첫 페이지</a>
+                        <a href="javascript:void(0);" onclick="findAllComment(${pagination.startPage - 1})" class="page_bt prev">이전 페이지</a>
+                    `;
+                }
+
+                // 4. 페이지 번호 추가
+                html += '<p>';
+                for (let i = pagination.startPage; i <= pagination.endPage; i++) {
+                    html += `<a href="javascript:void(0);" onclick="findAllComment(${i});">${i}</a>`
+                }
+                html += '</p>';
+
+                // 5. 다음/끝 페이지 버튼 추가
+                if (pagination.existNextPage) {
+                    html += `
+                        <a href="javascript:void(0);" onclick="findAllComment(${pagination.endPage + 1});" class="page_bt next">다음 페이지</a>
+                        <a href="javascript:void(0);" onclick="findAllComment(${pagination.totalPageCount});" class="page_bt last">마지막 페이지</a>
+                    `;
+                }
+
+                // 6. <div class="paging"></div> 태그에 변수 html에 담긴 내용을 렌더링
+                const paging = document.querySelector('.paging');
+                paging.innerHTML = html;
+
+                // 7. 사용자가 클릭한 페이지 번호(page) 또는 끝 페이지 번호(totalPageCount)에 해당되는 a 태그를 찾아 활성화(active) 처리한 후 클릭 이벤트 제거
+                const currentPage = Array.from(paging.querySelectorAll('a')).find(a => (Number(a.text) === page || Number(a.text) === pagination.totalPageCount));
+                currentPage.classList.add('on');
+                currentPage.removeAttribute('onclick');
+
+                 // 8. 페이지 URI 강제 변경
+                const postId = new URLSearchParams(location.search).get('id');
+                history.replaceState({}, '', location.pathname + `?id=${postId}&page=${currentPage.text}`);
+            }
+
+             // 전체 파일 조회
+            function findAllFile() {
+
+                // 1. API 호출
+                const postId = [[ ${post.id}]]; //서버에서 가져온 post의 id를 'postId' 변수에 할당
+                const response = getJson(`/posts/${postId}/files`); //AJAX를 사용해 서버에 get 요청을 보내고 해당 API의 응답을 response 변수에 할당
+                /*
+                파일 컨트롤러의 findAllFileByPostId()를 호출해서 게시글에 등록된 모든 첨부파일을 조회하는 로직임,
+                첨부파일이 있으면 response에는 컨트롤러 메소드의 리턴 타입인 List<FileResponse> 타입의 객체 배열이 담김
+                */
+
+                // 2. 로직 종료, 배열의 사이즈가 1보다 작다면 로직 종료
+                if ( !response.length ) {
+                    return false;
+                }
+
+                // 3. 파일 영역 추가
+                /*
+                fileHtml이라는 변수를 초기화하는데 파일 목록의 HTML을 저장하기 위해 div class를 file_down 과 cont로
+                response 배열을 순회하면서 각 파일의 정보를 HTML 형태로 fileHtml 변수에 추가함, 파일의 원본 이름을 출력하고 클릭 시 파일 다온로드
+                */
+                let fileHtml = '<div class="file_down"><div class="cont">';
+                response.forEach(row => {
+                    fileHtml += `<a href="/posts/${postId}/files/${row.id}/download"><span class="icons"><i class="fas fa-folder-open"></i></span>${row.originalName}</a>`;
+                })
+                fileHtml += '</div></div>';
+
+                        // 4. 파일 HTML 렌더링, files(첨부파일영역 id 이름) 라는 id를 가진 HTMl 요소의 내부 HTMl을 fileHtml로 설정하여 파일 목록 랜더링
+                        document.getElementById('files').innerHTML = fileHtml;
+                    }
+
+
+                function handleRecommendClick() {
+                  var recommendButton = document.getElementById('recommendButton');
+                  var recommendCount = document.getElementById('recommendCount');
+                  var isRecommended = recommendButton.classList.contains('liked');
+                  var postId = getPostIdFromURL();
+
+                  var xhr = new XMLHttpRequest();
+                  xhr.open('POST', isRecommended ? '/post/unrecommend.do' : '/post/recommend.do', true);
+                  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                  xhr.onreadystatechange = function() {
+                    if (xhr.readyState === XMLHttpRequest.DONE) {
+                      if (xhr.status === 200) {
+                        var newRecomCount = parseInt(recommendCount.innerText.replace(/[^0-9]/g, ''));
+                        if (isRecommended) {
+                          newRecomCount--;
+                        } else {
+                          newRecomCount++;
+                        }
+                        recommendCount.innerText = '추천 ' + newRecomCount;
+                        recommendButton.classList.toggle('liked');
+                      } else {
+                        // 요청이 실패했을 때 처리할 코드 작성
+                        console.error('Request failed.');
+                      }
+                    }
+                  };
+
+                // 서버로 전송할 데이터 생성
+                var data = 'id=' + encodeURIComponent(postId);
+
+                // 요청 전송
+                xhr.send(data);
+              }
+
+
+            function getPostIdFromURL() {
+              var urlParams = new URLSearchParams(window.location.search);
+              return urlParams.get('id');
+            }
+
+            function checkQuestionPost() {
+              // JavaScript 코드
+              // 내용, 내용2, 내용3, 내용4 필드가 null이면 해당 요소를 숨깁니다.
+              if ([[ ${post.content} ]] === null) {
+                document.querySelector('tr:nth-child(3)').style.display = 'none'; // 내용
+              }
+              if ([[ ${post.content2} ]] === null) {
+                document.querySelector('tr:nth-child(4)').style.display = 'none'; // 내용2
+              }
+              if ([[ ${post.content3} ]] === null) {
+                document.querySelector('tr:nth-child(5)').style.display = 'none'; // 내용3
+              }
+              if ([[ ${post.content4} ]] === null) {
+                document.querySelector('tr:nth-child(6)').style.display = 'none'; // 내용4
+              }
+            }
+
+
+        /*]]>*/
+  </script>
+</th:block>
+</html>

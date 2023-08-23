@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/header :: main-head"></head>
+<body>
+<form th:if="${not #maps.isEmpty( params.data )}" id="redirectForm" th:action="${params.redirectUri}" th:method="${params.method}" style="display: none;">
+    <!--#maps.isEmpty()는 맵 객체가 비어있는지 화인하는 타임리프 메서드, params.data가 비어있지 않을 때에만 폼이 생성되도록 한다-->
+    <!--폼의 id는 redirectForm이고 폼이 제출될때 액션 URL은 params객체의 redirectUri 속성 값을 출력하여 동적으로 URL을 생성한다-->
+    <!--th:method는 폼의 전송 방식으로 params객체의 method 값을 출력하여 동적으로 전송한다. style disaplay none은 폼을 화면에 표시하지 않도록 숨긴다-->
+    <input th:each="key, status : ${params.data.keySet()}" type="hidden" th:name="${key}" th:value="${params.data.get(key)}" />
+    <!--params.data.keySet()을 순회하면서 각 키를 'key' 변수에 할당한다. 필드의 값을 위의 params.data 맵에서 해당 키를 사용하여 가져온 값으로 설장한다-->
+
+</form>
+<!--
+if(message):전달받은 메시지가 있을 때 altert 메시지를 보여줌
+const form부터 쭉: if 조건을 통해 폼 태그가 있는지 체크하고 있으면 submit하고 리턴값으로 false를 줘서 빠져나온다
+하지만 form이 비어있어 if문을 실행하지 않으면 밑에 redirectUri에 해당하는 주소로 이동한다.
+즉, 데이터의 유무에 따라 폼 데이터를 submit할지 단순히 주소만 이동할지가 결정된다
+-->
+
+<script th:inline="javascript">
+    /* <![CDATA[ */
+
+        window.onload = () => {
+            const message = [[ ${params.message} ]];
+            if (message) {
+                alert(message);
+            }
+
+            const form = document.getElementById('redirectForm');
+            if (form) {
+                form.submit();
+                return false;
+            }
+
+            const redirectUri = [[ ${params.redirectUri} ]];
+            location.href = redirectUri;
+        }
+
+    /* ]]> */
+    </script>
+</body>
+</html>

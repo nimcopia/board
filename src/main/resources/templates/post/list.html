@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="layout/basic">
+<th:block layout:fragment="title">
+  <title>리스트 페이지</title>
+</th:block>
+
+<th:block layout:fragment="content">
+  <div class="page_tits">
+    <h3>문제 목록</h3>
+    <p class="path"><strong>현재 위치 :</strong> <span>정보처리기사</span> <span>문제 목록</span> </p>
+  </div>
+
+  <div class="content">
+    <section>
+      <!--/* 검색 */-->
+      <div class="search_box">
+        <form id="searchForm" onsubmit="return false;" autocomplete="off"> <!--검색폼임, 폼의 검색 유형(searchType)과 키워드를 sql 쿼리의 검색 조건으로 이용해서 검색함-->
+          <div class="sch_group fl">
+            <select id="searchType" name="searchType" title="검색 유형 선택">
+              <option value="">전체 검색</option>
+              <option value="title">제목</option>
+              <option value="writer">작성자</option>
+            </select>
+            <input type="text" id="keyword" name="keyword" placeholder="키워드를 입력해 주세요." title="키워드 입력" />
+            <button type="button" class="bt_search" onclick="movePage(1);"><i class="fas fa-search"></i><span class="skip_info">검색</span></button>
+            <!--검색 처리에서 현재 페이지 번호는 항상 '1'로 유지되어야 함, 만약 15페이지에서 검색했는데 검색 페이지중 15페이지 그대로 검색이 되면 문제가 생긴다-->
+
+          </div>
+        </form>
+      </div>
+
+      <!--/* 리스트 */-->
+      <table class="tb tb_col">
+        <colgroup>
+          <col style="width:50px;" /><col style="width:7.5%;" /><col style="width:auto;" /><col style="width:10%;" /><col style="width:15%;" /><col style="width:7.5%;" />
+        </colgroup>
+        <thead>
+        <tr>
+          <th colspan="2">
+            <button id = "allBtn" onclick="findAllPosts()">전체글</button>
+          </th>
+          <th colspan="2">
+            <button id = "recomBtn" onclick="findRecomPosts()">개념글</button>
+          </th>
+          <th colspan="2">
+            <button id = "noticeBtn" onclick="findNoticePosts()">공지</button>
+          </th>
+        </tr>
+        <tr>
+          <th scope="col"><input type="checkbox" /></th>
+          <th scope="col">번호</th>
+          <th scope="col">제목</th>
+          <th scope="col">작성자</th>
+          <th scope="col">등록일</th>
+          <th scope="col">조회</th>
+        </tr>
+        </thead>
+        <tbody id="list">
+        <!-- 테이블 내용 생략 -->
+        </tbody>
+      </table>
+
+      <!--/* 페이지네이션 */-->
+      <div class="paging">
+        <a href="#" class="page_bt first">첫 페이지</a><a href="#" class="page_bt prev">이전 페이지 그룹</a>
+        <p><span class="on">1</span><a href="#">2</a><a href="#">3</a><a href="#">4</a><a href="#">5</a><a href="#">6</a><a href="#">7</a><a href="#">8</a><a href="#">9</a><a href="#">10</a></p>
+        <a href="#" class="page_bt next">다음 페이지 그룹</a><a href="#" class="page_bt last">마지막 페이지</a>
+      </div>
+
+      <!--/* 버튼 */-->
+      <p class="btn_set tr">
+        <a th:href="@{/post/write.do}" class="btns btn_st3 btn_mid">글쓰기</a>
+      </p>
+    </section>
+  </div>
+</th:block>
+  <!--/* .content */-->
+  <th:block layout:fragment="script">
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+            // 페이지가 로드되었을 때, 딱 한 번만 함수를 실행
+            window.onload = () => {
+                setQueryStringParams();
+
+                findAllPost();
+            }
+
+
+            // 쿼리 스트링 파라미터 셋팅
+            function setQueryStringParams() {
+
+                if ( !location.search ) {
+                    return false;
+                }
+
+                const form = document.getElementById('searchForm');
+                //현재 URL의 쿼리 매개변수를 가져옴 forEach메서드로 반복하면서 각 매개변수의 값을 value로, 이름을 Key로 받음
+                //form 객체 내에 key와 동일한 이름을 가진 요소가 있는지 확인하고 있다면 value로 설정함 이를 통해 이전에 수행한 검색 조건을 복원가능
+                new URLSearchParams(location.search).forEach((value, key) => {
+                    if (form[key]) {
+                        form[key].value = value;
+                    }
+                })
+            }
+
+
+            // 게시글 리스트 조회
+            function findAllPost() {
+
+                // 1. PagingResponse의 멤버인 List<T> 타입의 list를 의미
+                const list = [[ ${response.list} ]];
+
+                // 2. 리스트가 비어있는 경우, 행에 "검색 결과가 없다"는 메시지를 출력하고, 페이지 번호(페이지네이션) HTML을 제거(초기화)한 후 로직을 종료
+                if ( !list.length ) {
+                    document.getElementById('list').innerHTML = '<td colspan="6"><div className="no_data_msg">검색된 결과가 없습니다.</div></td>';
+                   //innerHTML은 DOM 요소의 내부 HTML 콘텐츠를 나타내는 속성, 자바스크립트를 통해 동적으로 HTML을 생성,수정 가능함
+                   //해석하자면 id가 "list"인 요소의 내부 HTML 콘텐츠를 검색된 결과가 없습니다 라는 메시지를 포함한 div 엘리먼트를 추가한다
+                    drawPage();
+                }
+
+                // 3. PagingResponse의 멤버인 pagination을 의미
+                const pagination = [[ ${response.pagination} ]];
+
+                // 4. @ModelAttribute를 이용해서 뷰(HTML)로 전달한 SearchDto 타입의 객체인 params를 의미
+                const params = [[ ${params} ]];
+
+                // 5. 리스트에 출력되는 게시글 번호를 처리하기 위해 사용되는 변수 (리스트에서 번호는 페이지 정보를 이용해서 계산해야 함)
+                let num = pagination.totalRecordCount - ((params.page - 1) * params.recordSize);
+
+                // 6. 리스트 데이터 렌더링
+                drawList(list, num);
+
+                // 7. 페이지 번호 렌더링
+                drawPage(pagination, params);
+            }
+
+
+            // 리스트 HTML draw
+function drawList(list, num) {
+  let html = '';
+
+  list.forEach(row => {
+    // 추천 수가 5 이상인지 확인합니다.
+    const isRecommended = row.recomCnt > 5;
+
+    // 추천된 게시글인 경우 제목 앞에 별 모양을 추가합니다.
+    const title = isRecommended ? `<span class="star">*</span>${row.title}` : row.title;
+
+
+    let noticeType = row.id; // 기본값 설정
+
+    if (row.noticeYn == 1) { // 여기서 1은 noticeYn이 공지글일 때의 값
+      noticeType = '공지';
+    }
+    if (row.content.trim() === '' && row.content2.trim() === '' && row.content3.trim() === '' && row.content4.trim() === '' && row.noticeYn != 1) {
+      noticeType = '질문';
+    }
+
+
+    html += `
+      <tr>
+        <td><input type="checkbox" /></td>
+        <td>${noticeType}</td>
+        <td class="tl">
+          <a href="javascript:void(0);" onclick="goViewPage(${row.id});">
+            ${title}
+          </a>
+        </td>
+        <td>${row.writer}</td>
+        <td>${dayjs(row.createdDate).format('YYYY-MM-DD HH:mm')}</td>
+        <td>${row.viewCnt}</td>
+      </tr>
+    `;
+  });
+
+  document.getElementById('list').innerHTML = html;
+}
+
+
+            // 페이지 HTML draw
+            function drawPage(pagination, params) {
+
+                // 1. 필수 파라미터가 없는 경우, 페이지 번호(페이지네이션) HTML을 제거(초기화)한 후 로직 종료
+                if ( !pagination || !params ) {
+                    document.querySelector('.paging').innerHTML = '';
+                    throw new Error('Missing required parameters...');
+                }
+
+                // 2. 렌더링 할 HTML을 저장할 변수
+                let html = '';
+
+                // 3. 이전 페이지가 있는 경우, 즉 시작 페이지(startPage)가 1이 아닌 경우 첫 페이지 버튼과 이전 페이지 버튼을 HTML에 추가
+                if (pagination.existPrevPage) {
+                    html += `
+                        <a href="javascript:void(0);" onclick="movePage(1)" class="page_bt first">첫 페이지</a>
+                        <a href="javascript:void(0);" onclick="movePage(${pagination.startPage - 1})" class="page_bt prev">이전 페이지</a>
+                    `;
+                }
+
+                /*
+                 * 4. 시작 페이지(startPage)와 끝 페이지(endPage) 사이의 페이지 번호(i)를 넘버링 하는 로직
+                 *    페이지 번호(i)와 현재 페이지 번호(params.page)가 동일한 경우, 페이지 번호(i)를 활성화(on) 처리
+                 */
+                html += '<p>';
+                for (let i = pagination.startPage; i <= pagination.endPage; i++) {
+                    html += (i !== params.page)
+                        ? `<a href="javascript:void(0);" onclick="movePage(${i});">${i}</a>`
+                        : `<span class="on">${i}</span>`
+                }
+                html += '</p>';
+
+                // 5. 현재 위치한 페이지 뒤에 데이터가 더 있는 경우, 다음 페이지 버튼과 끝 페이지 버튼을 HTML에 추가
+                if (pagination.existNextPage) {
+                    html += `
+                        <a href="javascript:void(0);" onclick="movePage(${pagination.endPage + 1});" class="page_bt next">다음 페이지</a>
+                        <a href="javascript:void(0);" onclick="movePage(${pagination.totalPageCount});" class="page_bt last">마지막 페이지</a>
+                    `;
+                }
+
+                // 6. class가 "paging"인 요소를 찾아 HTML을 렌더링
+                document.querySelector('.paging').innerHTML = html;
+            }
+
+
+            // 페이지 이동
+            function movePage(page) {
+
+                // 1. 검색 폼
+                const form = document.getElementById('searchForm');
+
+                // 2. drawPage( )의 각 버튼에 선언된 onclick 이벤트를 통해 전달받는 page(페이지 번호)를 기준으로 객체 생성
+                const queryParams = {
+                    page: (page) ? page : 1,
+                    recordSize: 10,
+                    pageSize: 10,
+                    searchType: form.searchType.value,
+                    keyword: form.keyword.value
+                }
+
+                /*
+                 * 3. location.pathname : 리스트 페이지의 URI("/post/list.do")를 의미
+                 *    new URLSearchParams(queryParams).toString() : queryParams의 모든 프로퍼티(key-value)를 쿼리 스트링으로 변환
+                 *    URI + 쿼리 스트링에 해당하는 주소로 이동
+                 *
+                 */
+                const queryString = new URLSearchParams(queryParams).toString();
+
+                // 4. 페이지 이동
+                location.href = location.pathname + '?' + queryString;
+
+            }
+
+
+            // 게시글 상세 페이지로 이동
+           //삼항 연산자가 사용된 이유는 처음 리스트 페이지로 접근하면 쿼리 스트링이 비어있는 상태가 되고 이는 현재 페이지가 1페이지임을 의미함
+           //이때 location.search는 빈 문자열('')을 리턴하기 때문에 게시글 번호만 쿼리 스트링으로 전달하고(삼항 연산자중 false) 이외에는 페이지 정보, 검색 조건, 게시글 번호를 함께 전달함
+
+            function goViewPage(id) {
+                const queryString = (location.search) ? location.search + `&id=${id}` : `?id=${id}`;
+                location.href = '/post/view.do' + queryString;
+            }
+
+            function findRecomPosts() {
+              // 1. 검색 폼
+              const form = document.getElementById('searchForm');
+
+              // 2. 키워드 값을 'recom'으로 설정
+              form.keyword.value = 'recom';
+
+              // 3. movePage() 함수 호출
+              movePage();
+            }
+
+            function findNoticePosts() {
+              // 1. 검색 폼
+              const form = document.getElementById('searchForm');
+
+              // 2. 키워드 값을 'recom'으로 설정
+              form.keyword.value = 'notice';
+
+              // 3. movePage() 함수 호출
+              movePage();
+            }
+
+            function findAllPosts() {
+              window.location.href = 'http://localhost:8080/post/list.do';
+            }
+
+
+        /*]]>*/
+        </script>
+  </th:block>
+</html>
